@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 class ModelConfig:
     @classmethod
-    def get_num_classes(pbtxt_fname):
+    def get_num_classes(cls,pbtxt_fname):
         
         label_map = label_map_util.load_labelmap(pbtxt_fname)
         categories = label_map_util.convert_label_map_to_categories(
@@ -13,7 +13,7 @@ class ModelConfig:
         return len(category_index.keys())
 
     @classmethod
-    def get_selected_model():
+    def get_selected_model(cls):
         load_dotenv(dotenv_path='selected.env')
 
         with open("models.json") as jf:

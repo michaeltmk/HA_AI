@@ -1,18 +1,13 @@
 object_detection
-cv2
+opencv-python
 numpy
 matplotlib
-os
-random
-io
-imageio
-glob
+
+
 scipy
 
 six
-PIL
+
 
 tensorflow
-
-json
-configparser
+python-dotenv

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class LoadImage:
     @classmethod
-    def load_image_into_numpy_array(self, path, IM_HEIGHT=640, IM_WIDTH = 480):
+    def load_image_into_numpy_array(cls, path, IM_HEIGHT=640, IM_WIDTH = 480):
           """Load an image from file into a numpy array.
         Puts image into numpy array to feed into tensorflow graph.
         Note that by convention we put it into a numpy array with shape
@@ -22,7 +22,7 @@ class LoadImage:
         return np.array(image).astype(np.uint8)
     
     @classmethod
-    def plot_detections(image_np,
+    def plot_detections(cls,image_np,
                 boxes,
                 classes,
                 scores,
