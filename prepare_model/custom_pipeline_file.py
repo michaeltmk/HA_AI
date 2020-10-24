@@ -6,10 +6,10 @@ class CustomPipelineFile:
     def __init__(self, pipeline_path):
         with open(pipeline_path) as file:
             self.pipeline = file.read()
-    def write_custom_config(self):
+    def write_custom_config(self,new_path):
         print('writing custom configuration file')
         s = self.pipeline
-        with open('pretrained_model/custom_pipeline.config', 'w') as f:
+        with open(new_path, 'w') as f:
             
             # fine_tune_checkpoint
             s = re.sub('fine_tune_checkpoint: ".*?"',
