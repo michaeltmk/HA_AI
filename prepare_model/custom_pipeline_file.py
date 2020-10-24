@@ -26,13 +26,13 @@ class CustomPipelineFile:
             
             # tfrecord files train and test.
             s = re.sub(
-                '(input_path: ".*?)(PATH_TO_BE_CONFIGURED/train)(.*?")', 'input_path: "{}"'.format(train_record_fname), s)
+                '(input_path: ".*?)(PATH_TO_BE_CONFIGURED/train)(.*?")', 'input_path: "{}"'.format(train_record_fpath), s)
             s = re.sub(
-                '(input_path: ".*?)(PATH_TO_BE_CONFIGURED/val)(.*?")', 'input_path: "{}"'.format(test_record_fname), s)
+                '(input_path: ".*?)(PATH_TO_BE_CONFIGURED/val)(.*?")', 'input_path: "{}"'.format(test_record_fpath), s)
 
             # label_map_path
             s = re.sub(
-                'label_map_path: ".*?"', 'label_map_path: "{}"'.format(label_map_pbtxt_fname), s)
+                'label_map_path: ".*?"', 'label_map_path: "{}"'.format(label_map_pbtxt_fpath), s)
 
             # Set training batch_size.
             s = re.sub('batch_size: [0-9]+',
