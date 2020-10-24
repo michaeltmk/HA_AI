@@ -44,7 +44,7 @@ class ToolsClassifiers:
         os.system("mkdir -p trained_model/")
 
         print(f"Training the model with: --pipeline_config_path={self.new_pipeline_fpath} \
-        --model_dir=trained_model/ \
+        --model_dir=trained_model/{self.model_name}/ \
         --alsologtostderr \
         --num_train_steps={self.num_steps} \
         --sample_1_of_n_eval_examples=1 \
@@ -52,7 +52,7 @@ class ToolsClassifiers:
 
         os.system(f"python3 models/research/object_detection/model_main_tf2.py \
         --pipeline_config_path={self.new_pipeline_fpath} \
-        --model_dir=trained_model/ \
+        --model_dir=trained_model/{self.model_name}/ \
         --alsologtostderr \
         --num_train_steps={self.num_steps} \
         --sample_1_of_n_eval_examples=1 \
