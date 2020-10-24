@@ -43,7 +43,7 @@ class ToolsClassifiers:
     def train(self):
         os.system("mkdir -p trained_model/")
 
-        print(f"Training the model with: --pipeline_config_path={self.pipeline_fpath} \
+        print(f"Training the model with: --pipeline_config_path={self.new_pipeline_fpath} \
         --model_dir=trained_model/ \
         --alsologtostderr \
         --num_train_steps={self.num_steps} \
@@ -51,7 +51,7 @@ class ToolsClassifiers:
         --num_eval_steps={self.num_eval_steps}")
 
         os.system(f"python3 models/research/object_detection/model_main_tf2.py \
-        --pipeline_config_path={self.pipeline_fpath} \
+        --pipeline_config_path={self.new_pipeline_fpath} \
         --model_dir=trained_model/ \
         --alsologtostderr \
         --num_train_steps={self.num_steps} \
@@ -61,3 +61,4 @@ class ToolsClassifiers:
 if __name__ == "__main__":
     app = ToolsClassifiers()
     app.change_pipeline_file()
+    app.train()
