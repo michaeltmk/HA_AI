@@ -6,14 +6,23 @@ class CustomPipelineFile:
     def __init__(self, pipeline_path):
         with open(pipeline_path) as file:
             self.pipeline = file.read()
-    def write_custom_config(self,new_path):
+    def write_custom_config(self,
+                            new_path,
+                            checkpoint_fpath,
+                            train_record_fpath,
+                            test_record_fpath,
+                            label_map_pbtxt_fpath,
+                            batch_size,
+                            num_steps,
+                            num_classes
+                            ):
         print('writing custom configuration file')
         s = self.pipeline
         with open(new_path, 'w') as f:
             
             # fine_tune_checkpoint
             s = re.sub('fine_tune_checkpoint: ".*?"',
-                    'fine_tune_checkpoint: "{}"'.format(fine_tune_checkpoint), s)
+                    'fine_tune_checkpoint: "{}"'.format(checkpoint_fpath), s)
             
             # tfrecord files train and test.
             s = re.sub(
