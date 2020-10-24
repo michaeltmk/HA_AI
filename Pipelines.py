@@ -11,8 +11,8 @@ class ToolsClassifiers:
         self.num_eval_steps = os.getenv("num_eval_steps")
         self.base_pipeline_fname = ModelConfig.get_selected_model()["base_pipeline_file"]
         self.new_pipeline_fname = "custom_"+self.base_pipeline_fname
-        self.base_pipeline_fpath = "pretrained_model/"+self.model_name+"/ "+self.base_pipeline_fname
-        self.new_pipeline_fpath = "pretrained_model/"+self.model_name+"/ "+self.new_pipeline_fname
+        self.base_pipeline_fpath = "pretrained_model/"+self.model_name+"/"+self.base_pipeline_fname
+        self.new_pipeline_fpath = "pretrained_model/"+self.model_name+"/"+self.new_pipeline_fname
     
     def change_pipeline_file(self):
         old_pipe=CustomPipelineFile(self.base_pipeline_fpath)
@@ -39,4 +39,5 @@ class ToolsClassifiers:
         --num_eval_steps={self.num_eval_steps}")
 
 if __name__ == "__main__":
-    change_pipeline_file()
+    app = ToolsClassifiers()
+    app.change_pipeline_file()
