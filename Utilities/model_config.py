@@ -1,6 +1,7 @@
 from object_detection.utils import label_map_util
 import json
 from dotenv import load_dotenv
+import os
 
 class ModelConfig:
     @classmethod
@@ -15,9 +16,9 @@ class ModelConfig:
     @classmethod
     def get_selected_model(cls):
         load_dotenv(dotenv_path='selected.env')
-
-        with open("models.json") as jf:
-            MODELS_CONFIG = json.loads(jf)
+        selected_model = os.getenv("SELECTED_MODEL")
+        with open("prepare_model/models.json") as jf:
+            MODELS_CONFIG = json.load(jf)
 
         pretrained_checkpoint = MODELS_CONFIG[selected_model]['pretrained_checkpoint']
 
