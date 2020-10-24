@@ -13,3 +13,6 @@ six
 PIL
 
 tensorflow
+
+json
+configparser
