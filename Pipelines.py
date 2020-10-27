@@ -43,22 +43,62 @@ class ToolsClassifiers:
     def train(self):
         os.system("mkdir -p trained_model/")
 
-        print(f"Training the model with: --pipeline_config_path={self.new_pipeline_fpath} \
-        --model_dir=trained_model/{self.model_name}/ \
-        --alsologtostderr \
-        --num_train_steps={self.num_steps} \
-        --sample_1_of_n_eval_examples=1 \
-        --num_eval_steps={self.num_eval_steps}")
-
-        os.system(f"python3 models/research/object_detection/model_main_tf2.py \
+        Command = f"python3 models/research/object_detection/model_main_tf2.py \
         --pipeline_config_path={self.new_pipeline_fpath} \
         --model_dir=trained_model/{self.model_name}/ \
         --alsologtostderr \
         --num_train_steps={self.num_steps} \
         --sample_1_of_n_eval_examples=1 \
-        --num_eval_steps={self.num_eval_steps}")
+        --num_eval_steps={self.num_eval_steps}"
+
+        print(f"Training the model with: {Command}")
+        os.system(Command)
+
+    def save(self):
+        os.system(f"python3 models/research/object_detection/exporter_main_v2.py \
+        --trained_checkpoint_dir=trained_model/{self.model_name}/ \
+        --output_directory='fine_tuned_model/{self.model_name}/' \
+        --pipeline_config_path={self.new_pipeline_fpath}")
+        print("saved!")
+
+    def predict(self):
+        #recover our saved model
+        #generally you want to put the last ckpt from training in here
+        fine_tuned_ckpt = 'fine_tuned_model/{self.model_name}/ckpt-1'  #TODO: add a function to check the latest ckpt
+        configs = config_util.get_configs_from_pipeline_file(self.new_pipeline_fpath)
+        model_config = configs['model']
+        detection_model = model_builder.build(
+            model_config=model_config, is_training=False)
+
+        # Restore checkpoint
+        ckpt = tf.compat.v2.train.Checkpoint(
+            model=detection_model)
+        ckpt.restore(os.path.join(fine_tuned_ckpt))
+
+
+        def get_model_detection_function(model):
+        """Get a tf.function for detection."""
+
+            @tf.function
+            def detect_fn(image):
+                """Detect objects in image."""
+
+                image, shapes = model.preprocess(image)
+                prediction_dict = model.predict(image, shapes)
+                detections = model.postprocess(prediction_dict, shapes)
+
+                return detections, prediction_dict, tf.reshape(shapes, [-1])
+
+        return detect_fn
+
+        detect_fn = get_model_detection_function(detection_model)
+
+
+
+
 
 if __name__ == "__main__":
     app = ToolsClassifiers()
-    app.change_pipeline_file()
-    app.train()
+    #app.change_pipeline_file()
+    #app.train()
+    app.save()
