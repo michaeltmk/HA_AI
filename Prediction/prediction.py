@@ -35,7 +35,7 @@ class Prediction:
     Returns:
         A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
         and `detection_scores`).
-    """
+        """
     preprocessed_image, shapes = self.detection_model.preprocess(input_tensor)
     prediction_dict = self.detection_model.predict(preprocessed_image, shapes)
     return self.detection_model.postprocess(prediction_dict, shapes)
@@ -50,7 +50,7 @@ class Prediction:
 
         detections = detect(input_tensor)
         plot_detections(
-            test_images_np[i][0],
+            test_images_np[0],
             detections['detection_boxes'][0].numpy(),
             detections['detection_classes'][0].numpy().astype(np.uint32)
             + label_id_offset,
@@ -66,3 +66,8 @@ class Prediction:
         test_images_np.append(np.expand_dims(
             load_image_into_numpy_array(image_path), axis=0))
   
+if __name__ == "__main__":
+      Prediction('trained_model/efficientdet_d0_coco17_tpu-32/ckpt-1',
+      "pretrained_model/efficientdet_d0_coco17_tpu-32/custom_ssd_efficientdet_d0_512x512_coco17_tpu-8.config"
+      )
+      
