@@ -24,18 +24,18 @@ class Prediction:
 
     @tf.function
     def detect(self,input_tensor):
-    """Run detection on an input image.
+        """Run detection on an input image.
 
-    Args:
-        input_tensor: A [1, height, width, 3] Tensor of type tf.float32.
-        Note that height and width can be anything since the image will be
-        immediately resized according to the needs of the model within this
-        function.
+        Args:
+            input_tensor: A [1, height, width, 3] Tensor of type tf.float32.
+            Note that height and width can be anything since the image will be
+            immediately resized according to the needs of the model within this
+            function.
 
-    Returns:
-        A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
-        and `detection_scores`).
-        """
+        Returns:
+            A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
+            and `detection_scores`).
+            """
     preprocessed_image, shapes = self.detection_model.preprocess(input_tensor)
     prediction_dict = self.detection_model.predict(preprocessed_image, shapes)
     return self.detection_model.postprocess(prediction_dict, shapes)
@@ -70,4 +70,3 @@ if __name__ == "__main__":
       Prediction('trained_model/efficientdet_d0_coco17_tpu-32/ckpt-1',
       "pretrained_model/efficientdet_d0_coco17_tpu-32/custom_ssd_efficientdet_d0_512x512_coco17_tpu-8.config"
       )
-      
