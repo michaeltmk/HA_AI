@@ -5,6 +5,7 @@ import os
 import tensorflow as tf
 from Utilities.load_image.LoadImage import load_image_into_numpy_array
 from Utilities.load_image.LoadImage import plot_detections
+from Utilities.model_config.ModelConfig import get_category_index
 from object_detection.utils import config_util
 from object_detection.builders import model_builder
 
@@ -43,17 +44,19 @@ class Prediction:
         prediction_dict = self.detection_model.predict(preprocessed_image, shapes)
         return self.detection_model.postprocess(prediction_dict, shapes)
 
-    def single_test(self,test_image_dir):
+    def single_test(self,test_image_dir, pbtxt_fpath):
         #test_image_dir = '/content/drive/My Drive/HA AI Challenge 2020/Reference Models/Dataset/Dev/'
 
         TEST_IMAGE_PATHS = glob.glob(test_image_dir+'*.jpg')
         image_path = random.choice(TEST_IMAGE_PATHS)
         image_np = load_image_into_numpy_array(image_path)
         input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-
         detections = self.detect(input_tensor)
+        category_index = get_category_index(pbtxt_fpath)
+
+        label_id_offset = 1
         plot_detections(
-            test_images_np[0],
+            image_np,
             detections['detection_boxes'][0].numpy(),
             detections['detection_classes'][0].numpy().astype(np.uint32)
             + label_id_offset,
