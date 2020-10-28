@@ -12,6 +12,7 @@ class ModelConfig:
         category_index = label_map_util.create_category_index(categories)
         return len(category_index.keys())
 
+    @classmethod
     def get_category_index(cls,pbtxt_fpath):
         label_map = label_map_util.load_labelmap(pbtxt_fpath)
         categories = label_map_util.convert_label_map_to_categories(

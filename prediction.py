@@ -3,14 +3,15 @@ import glob
 import numpy as np
 import os
 import tensorflow as tf
-from Utilities.load_image.LoadImage import load_image_into_numpy_array
-from Utilities.load_image.LoadImage import plot_detections
-from Utilities.model_config.ModelConfig import get_category_index
+from dotenv import load_dotenv
+from Utilities.load_image import LoadImage
+from Utilities.model_config import ModelConfig
 from object_detection.utils import config_util
 from object_detection.builders import model_builder
+import matplotlib.pyplot as plt
 
 class Prediction:
-    def __init__(self, new_pipeline_fpath, fine_tuned_ckpt):
+    def __init__(self, fine_tuned_ckpt,new_pipeline_fpath):
         #recover our saved model
         #generally you want to put the last ckpt from training in here
         #'fine_tuned_model/{self.model_name}/ckpt-1'  #TODO: add a function to check the latest ckpt
@@ -49,20 +50,20 @@ class Prediction:
 
         TEST_IMAGE_PATHS = glob.glob(test_image_dir+'*.jpg')
         image_path = random.choice(TEST_IMAGE_PATHS)
-        image_np = load_image_into_numpy_array(image_path)
+        image_np = LoadImage.load_image_into_numpy_array(image_path)
         input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
         detections = self.detect(input_tensor)
-        category_index = get_category_index(pbtxt_fpath)
+        category_index = ModelConfig.get_category_index(pbtxt_fpath)
 
         label_id_offset = 1
-        plot_detections(
+        LoadImage.plot_detections(
             image_np,
             detections['detection_boxes'][0].numpy(),
             detections['detection_classes'][0].numpy().astype(np.uint32)
             + label_id_offset,
             detections['detection_scores'][0].numpy(),
             category_index, figsize=(15, 20))
-        plt.show()
+
 
     def test(self,test_image_dir):
         test_images_np = []
@@ -70,7 +71,7 @@ class Prediction:
         for i in range(1, 50):
             image_path = images_path[i]
             test_images_np.append(np.expand_dims(
-                load_image_into_numpy_array(image_path), axis=0))
+                LoadImage.load_image_into_numpy_array(image_path), axis=0))
 
 if __name__ == "__main__":
     model = Prediction('trained_model/efficientdet_d0_coco17_tpu-32/ckpt-1',
@@ -78,4 +79,4 @@ if __name__ == "__main__":
     )
     load_dotenv(dotenv_path="dataset.env")
     DATASET_PATH = os.getenv("DATASET_PATH")
-    model.single_test(DATASET_PATH+"dev/")
+    model.single_test(DATASET_PATH+"Dev/",DATASET_PATH+"label_map.pbtxt")

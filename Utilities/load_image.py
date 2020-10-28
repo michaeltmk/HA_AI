@@ -58,5 +58,5 @@ class LoadImage:
             plt.imsave(image_name, image_np_with_annotations)
         else:
             plt.imshow(image_np_with_annotations)
-        plt.show()
+            plt.show()
 
