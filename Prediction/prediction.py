@@ -36,14 +36,14 @@ class Prediction:
             A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
             and `detection_scores`).
             """
-    preprocessed_image, shapes = self.detection_model.preprocess(input_tensor)
-    prediction_dict = self.detection_model.predict(preprocessed_image, shapes)
-    return self.detection_model.postprocess(prediction_dict, shapes)
+        preprocessed_image, shapes = self.detection_model.preprocess(input_tensor)
+        prediction_dict = self.detection_model.predict(preprocessed_image, shapes)
+        return self.detection_model.postprocess(prediction_dict, shapes)
 
     def single_test(self,test_image_dir):
         #test_image_dir = '/content/drive/My Drive/HA AI Challenge 2020/Reference Models/Dataset/Dev/'
 
-        TEST_IMAGE_PATHS = glob.glob(test_image_dir='*.jpg')
+        TEST_IMAGE_PATHS = glob.glob(test_image_dir+'*.jpg')
         image_path = random.choice(TEST_IMAGE_PATHS)
         image_np = load_image_into_numpy_array(image_path)
         input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
@@ -65,8 +65,11 @@ class Prediction:
         image_path = images_path[i]
         test_images_np.append(np.expand_dims(
             load_image_into_numpy_array(image_path), axis=0))
-  
+
 if __name__ == "__main__":
-      Prediction('trained_model/efficientdet_d0_coco17_tpu-32/ckpt-1',
-      "pretrained_model/efficientdet_d0_coco17_tpu-32/custom_ssd_efficientdet_d0_512x512_coco17_tpu-8.config"
-      )
+    model = Prediction('trained_model/efficientdet_d0_coco17_tpu-32/ckpt-1',
+    "pretrained_model/efficientdet_d0_coco17_tpu-32/custom_ssd_efficientdet_d0_512x512_coco17_tpu-8.config"
+    )
+    load_dotenv(dotenv_path="dataset.env")
+    DATASET_PATH = os.getenv("DATASET_PATH")
+    model.single_test(DATASET_PATH+"dev/")
