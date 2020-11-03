@@ -1,13 +1,5 @@
-object_detection
+torchvision
 opencv-python
 numpy
+sys
 matplotlib
-
-
-scipy
-
-six
-
-
-tensorflow
-python-dotenv
