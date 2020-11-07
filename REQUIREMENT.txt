@@ -1,5 +1,7 @@
 torchvision
+torch
 opencv-python
 numpy
-sys
-matplotlib
+pandas
+Pillow
+efficientnet-pytorch
