@@ -15,6 +15,7 @@ RUN python3 -m pip install --upgrade pip && pip3 install -r /opt/requirements.tx
 
 # Add main script
 ADD main.py /usr/src/main.py
+ADD main.py ~/submission/main.py
 
 # Unzip model file
 RUN mkdir /opt/model
