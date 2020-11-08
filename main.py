@@ -61,9 +61,9 @@ def load_model(model_name, model_base_path, num_classes = 2):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     model.to(device)
     if torch.cuda.is_available():
-        checkpoint = torch.load(os.path.join(model_base_path, 'efficientnetb0_v1_first_trial_4.pth'))
+        checkpoint = torch.load(os.path.join('/usr/src/efficientnetb0_v1_first_trial_4.pth'))
     else:
-        checkpoint = torch.load(os.path.join(model_base_path, 'efficientnetb0_v1_first_trial_4.pth'), map_location=torch.device('cpu'))
+        checkpoint = torch.load(os.path.join('/usr/src/efficientnetb0_v1_first_trial_4.pth'), map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint['state_dict'])
     return model
 
