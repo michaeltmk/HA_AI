@@ -28,3 +28,6 @@ RUN mkdir -p /enigma/datasets/HA-Sample/
 RUN mkdir -p /enigma/local_storage/result/
 COPY . .
 VOLUME ["/enigma", "/usr/src"]
+
+COPY ./entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
