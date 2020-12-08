@@ -6,7 +6,7 @@ USER root
 # Set Environment Variable
 ENV LC_ALL=C.UTF-8
 
-RUN apt-get update
+RUN apt-get -y update
 RUN set -x; apt-get install -y --no-install-recommends p7zip-full python3 python3-pip libgl1-mesa-glx libgtk2.0-dev
  
 # Install dependencies
