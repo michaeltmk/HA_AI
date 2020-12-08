@@ -6,6 +6,7 @@ import torchvision
 import numpy as np
 import pandas as pd
 import torchvision.transforms as trans
+from torchvision import transforms as T2
 
 from PIL import Image
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
@@ -23,9 +24,10 @@ tool_class_list = [
 NUM_CLASSES = len(tool_class_list)
 prob_threshold = 0.1
 iou_threshold = 0.5
+model_size = (480,640)
 
 def load_model(model_base_path, num_classes=NUM_CLASSES):
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, pretrained_backbone=False)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     model.to(device)
@@ -52,6 +54,34 @@ def export_result_file(predict_result, counting_result):
                 prediction.append("%s %s" % (tool_class, str(count)))
             f.write("%s,%s\n" % (path, ';'.join(prediction)))
 
+def get_transform(img):
+    transforms = []
+    # converts the image, a PIL image, into a PyTorch Tensor
+    width,height = img.size
+    transforms.append(T2.ToTensor())
+    #testing 
+    #transforms.append(T2.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0))
+    if width > height:
+        if width > model_size[1]:
+        temp_height = int(height/width*model_size[1])
+        temp_width = model_size[1]
+        transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
+        width = temp_width
+        height = temp_height
+    else:
+        if height > model_size[0]:
+        temp_height = model_size[0]
+        temp_width = int(width/height*model_size[0])
+        transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
+        width = temp_width
+        height = temp_height
+    addedx = int((model_size[1] - width)/2)
+    addedy = int((model_size[0] - height)/2)
+    transforms.append(T2.Pad((addedx,addedy), padding_mode='constant'))
+    transforms.append(T2.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]))
+    trans = T2.Compose(transforms)
+    return trans(img)
+
 if __name__ == '__main__' :
     df = pd.read_csv(input_data_path)
     # predict_result: Creating an array like 
@@ -72,8 +102,8 @@ if __name__ == '__main__' :
         img_path = os.path.join(base_path, row['ImagePath'])
         # Load image
         img = Image.open(img_path).convert("RGB")
-        Tr = trans.ToTensor()
-        img = Tr(img)
+        # Tr = trans.ToTensor()
+        img = get_transform(img)
         # Get Prediction
         with torch.no_grad():
             prediction = model([img.to(device)])
