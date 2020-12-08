@@ -23,6 +23,9 @@ tool_class_list = [
     '\"Cannula\"', '\"Chopper\"', '\"Dressing Forceps\"', '\"Fixation Ring\"', '\"Handpieces\"', '\"Hook Surgical\"', '\"Iris Scissors\"', '\"Knife Scalpel Handles\"',
     '\"Micro Scissors\"', '\"Needle Holders\"', '\"Pusher\"', '\"Spatula Surgical\"', '\"Speculum\"', '\"Spoon Surgical\"', '\"Tissue Forceps\"'
 ]
+NUM_CLASSES = len(tool_class_list)
+prob_threshold = 0.1
+iou_threshold = 0.5
 
 class MyEfficientNet(EfficientNet):
 
@@ -33,7 +36,7 @@ class MyEfficientNet(EfficientNet):
         # Modify the forward method, so that it returns only the features.
         return super().extract_features(inputs)
 
-def load_model(model_name, model_base_path, num_classes = 2):
+def load_model(model_name, model_base_path, num_classes = NUM_CLASSES):
     if model_name == 'mobilenet_v2':
         backbone = torchvision.models.mobilenet_v2(pretrained=True).features
     elif model_name == 'efficientnet-b0':
@@ -95,7 +98,7 @@ if __name__ == '__main__' :
     predict_result = {}
     counting_result = {}
     # Load Model
-    model = load_model(model_name='efficientnet-b0', model_base_path=os.path.dirname(__file__), num_classes=4)
+    model = load_model(model_name='efficientnet-b0', model_base_path=os.path.dirname(__file__), num_classes=NUM_CLASSES)
     model.eval()
     for _index, row in df.iterrows():
         predict_result[row['ImagePath']] = []
@@ -114,6 +117,12 @@ if __name__ == '__main__' :
             boxes = prediction[0]['boxes'].cpu().numpy().tolist()
             scores = prediction[0]['scores'].cpu().numpy().tolist()
             labels = prediction[0]['labels'].cpu().numpy().tolist()
+            keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=probs, score_threshold=prob_threshold, nms_threshold=iou_threshold)
+            keep = list(map(lambda x: x[0], keep))
+            boxes = [boxes[idx] for idx in keep]
+            probs = [probs[idx] for idx in keep]
+            labels = [labels[idx] for idx in keep]
+
             for box in boxes:
                 tool_class = tool_class_list[int(labels[key])]
                 score = scores[key]
