@@ -63,18 +63,18 @@ def get_transform(img):
     #transforms.append(T2.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0))
     if width > height:
         if width > model_size[1]:
-        temp_height = int(height/width*model_size[1])
-        temp_width = model_size[1]
-        transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
-        width = temp_width
-        height = temp_height
+            temp_height = int(height/width*model_size[1])
+            temp_width = model_size[1]
+            transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
+            width = temp_width
+            height = temp_height
     else:
         if height > model_size[0]:
-        temp_height = model_size[0]
-        temp_width = int(width/height*model_size[0])
-        transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
-        width = temp_width
-        height = temp_height
+            temp_height = model_size[0]
+            temp_width = int(width/height*model_size[0])
+            transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
+            width = temp_width
+            height = temp_height
     addedx = int((model_size[1] - width)/2)
     addedy = int((model_size[0] - height)/2)
     transforms.append(T2.Pad((addedx,addedy), padding_mode='constant'))
