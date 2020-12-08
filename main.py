@@ -82,6 +82,60 @@ def get_transform(img):
     trans = T2.Compose(transforms)
     return trans(img)
 
+import cv2
+import numpy as np
+
+def draw_box(img, prediction,  prob_threshold, iou_threshold):
+  #prob filter
+  boxes = prediction[0]['boxes'].cpu().numpy().tolist() #must be a list to feed into NMS
+  probs = prediction[0]['scores'].cpu().numpy().tolist()
+  labels = prediction[0]['labels'].cpu().numpy().tolist()
+  keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=probs, score_threshold=prob_threshold, nms_threshold=iou_threshold)
+  COLORS = np.random.randint(0, 255, size=(max(labels), 3),dtype="uint8")
+  img = np.array(img)
+
+  keep = list(map(lambda x: x[0], keep))
+
+  boxes = [boxes[idx] for idx in keep]
+  probs = [probs[idx] for idx in keep]
+  labels = [labels[idx] for idx in keep]
+
+#   for idx in range(len(boxes)):
+#     box = boxes[idx]
+#     box = list(map(lambda x: int(x), box))
+#     label = labels[idx]
+#     prob = probs[idx]
+#     xmin, ymin, xmax, ymax = box
+#     color = [int(c) for c in COLORS[label-1]]
+
+#     cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
+#     text = f"{label}: {prob}"
+#     cv2.putText(img, text, (xmin, ymin - 5),
+#         cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1, 2)
+#     plt.imshow(img)
+
+#   plt.rcParams['figure.dpi'] = 100
+#   plt.show()
+
+  return {"boxes":boxes, "probs":probs, "labels":labels}
+
+def rescale_bbox(bboxes:list):
+  #input size of testing image: 4032*3024
+  #resize to model input : 640*480
+  #so ratio = 640/4032 , we hard code the ratio this time
+  def timesr(x):
+    return int(x/640*4032)
+  return list(map(timesr, bboxes))
+
+def output_adaptor(boxes:list, probs:list, labels:list):
+  boxes = list(map(rescare_bbox,boxes))
+  labels = list(map(lambda x: tool_class_list[x-1],labels))
+  output = []
+  for idx in range(len(boxes)):
+    row = [labels[idx], probs[idx]] + boxes[idx]
+    output.append(row)
+  return output
+
 if __name__ == '__main__' :
     df = pd.read_csv(input_data_path)
     # predict_result: Creating an array like 
