@@ -7,8 +7,8 @@ USER root
 ENV LC_ALL=C.UTF-8
 
 RUN apt-get update
-RUN set -x; apt-get install -y --no-install-recommends p7zip-full python3 python3-pip libgl1-mesa-glx
-
+RUN set -x; apt-get install -y --no-install-recommends p7zip-full python3 python3-pip libgl1-mesa-glx python3-dev python3-numpy libgtk2.0-dev
+ 
 # Install dependencies
 ADD REQUIREMENT.txt /opt/requirements.txt
 RUN python3 -m pip install --upgrade pip && pip3 install -r /opt/requirements.txt
