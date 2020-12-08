@@ -20,7 +20,7 @@ predict_result_path = sys.argv[2]
 counting_result_path = sys.argv[3]
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 tool_class_list = [
-    '\"Cannula\"', '\"Chopper\"', '\"Dressing Forceps\"', '\"Fixation Ring\"', '\"Handpieces\"', '\"Hook Surgical\"', '\"Iris Scissors\"', '\"Knife Scalpel Handles\"',
+    '\"bg\"','\"Cannula\"', '\"Chopper\"', '\"Dressing Forceps\"', '\"Fixation Ring\"', '\"Handpieces\"', '\"Hook Surgical\"', '\"Iris Scissors\"', '\"Knife Scalpel Handles\"',
     '\"Micro Scissors\"', '\"Needle Holders\"', '\"Pusher\"', '\"Spatula Surgical\"', '\"Speculum\"', '\"Spoon Surgical\"', '\"Tissue Forceps\"'
 ]
 NUM_CLASSES = len(tool_class_list)
@@ -95,11 +95,11 @@ if __name__ == '__main__' :
             boxes = prediction[0]['boxes'].cpu().numpy().tolist()
             scores = prediction[0]['scores'].cpu().numpy().tolist()
             labels = prediction[0]['labels'].cpu().numpy().tolist()
-            keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=probs, score_threshold=prob_threshold, nms_threshold=iou_threshold)
-            keep = list(map(lambda x: x[0], keep))
-            boxes = [boxes[idx] for idx in keep]
-            probs = [probs[idx] for idx in keep]
-            labels = [labels[idx] for idx in keep]
+            # keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=scores, score_threshold=prob_threshold, nms_threshold=iou_threshold)
+            # keep = list(map(lambda x: x[0], keep))
+            # boxes = [boxes[idx] for idx in keep]
+            # probs = [probs[idx] for idx in keep]
+            # labels = [labels[idx] for idx in keep]
 
             for box in boxes:
                 tool_class = tool_class_list[int(labels[key])]
