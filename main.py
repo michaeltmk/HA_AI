@@ -36,37 +36,15 @@ class MyEfficientNet(EfficientNet):
         # Modify the forward method, so that it returns only the features.
         return super().extract_features(inputs)
 
-def load_model(model_name, model_base_path, num_classes = NUM_CLASSES):
-    if model_name == 'mobilenet_v2':
-        backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-    elif model_name == 'efficientnet-b0':
-        backbone = MyEfficientNet.from_pretrained(model_name='efficientnet-b0', num_classes=num_classes)
-    if model_name == 'mobilenet_v2':
-        backbone.out_channels = 1280
-    elif model_name == 'efficientnet-b0':
-        backbone.out_channels = 1280
-    anchor_generator = AnchorGenerator(
-        sizes=((32, 64, 128, 256, 512),),
-        aspect_ratios=((0.5, 1.0, 2.0),)
-    )
-    roi_pooler = torchvision.ops.MultiScaleRoIAlign(
-        featmap_names=['0'],
-        output_size=7,
-        sampling_ratio=2
-    )
-    model = FasterRCNN(
-        backbone,
-        num_classes=num_classes,
-        rpn_anchor_generator=anchor_generator,
-        box_roi_pool=roi_pooler
-    )
+def load_model(model_base_path, num_classes=NUM_CLASSES):
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     model.to(device)
     if torch.cuda.is_available():
-        checkpoint = torch.load(os.path.join('/usr/src/efficientnetb0_v1_first_trial_4.pth'))
+        checkpoint = torch.load(os.path.join('/usr/src/resnet50_first_trial_maxacc.pth'))
     else:
-        checkpoint = torch.load(os.path.join('/usr/src/efficientnetb0_v1_first_trial_4.pth'), map_location=torch.device('cpu'))
+        checkpoint = torch.load(os.path.join('/usr/src/resnet50_first_trial_maxacc.pth'), map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint['state_dict'])
     return model
 
@@ -98,7 +76,7 @@ if __name__ == '__main__' :
     predict_result = {}
     counting_result = {}
     # Load Model
-    model = load_model(model_name='efficientnet-b0', model_base_path=os.path.dirname(__file__), num_classes=NUM_CLASSES)
+    model = load_model(model_base_path=os.path.dirname(__file__), num_classes=NUM_CLASSES)
     model.eval()
     for _index, row in df.iterrows():
         predict_result[row['ImagePath']] = []

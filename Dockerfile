@@ -7,7 +7,7 @@ USER root
 ENV LC_ALL=C.UTF-8
 
 RUN apt-get update
-RUN set -x; apt-get install -y --no-install-recommends p7zip-full python3 python3-pip libgl1-mesa-glx python3-dev python3-numpy libgtk2.0-dev
+RUN set -x; apt-get install -y --no-install-recommends p7zip-full python3 python3-pip libgl1-mesa-glx libgtk2.0-dev
  
 # Install dependencies
 ADD REQUIREMENT.txt /opt/requirements.txt
@@ -20,8 +20,8 @@ ADD main.py /root/submission/main.py
 
 # Unzip model file
 RUN mkdir /opt/model
-ADD efficientnetb0_v1_first_trial_4* /opt/model/
-RUN cd /usr/src && 7z x /opt/model/efficientnetb0_v1_first_trial_4.zip
+ADD resnet50_first_trial_maxacc* /opt/model/
+RUN cd /usr/src && 7z x /opt/model/resnet50_first_trial_maxacc.zip
 RUN rm -rf /opt/model
 
 # Add required dir
