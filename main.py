@@ -8,9 +8,6 @@ import pandas as pd
 import torchvision.transforms as trans
 
 from PIL import Image
-from efficientnet_pytorch import EfficientNet
-from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 
@@ -27,17 +24,8 @@ NUM_CLASSES = len(tool_class_list)
 prob_threshold = 0.1
 iou_threshold = 0.5
 
-class MyEfficientNet(EfficientNet):
-
-    def __init__(self, blocks_args=None, global_params=None):
-        super().__init__(blocks_args, global_params)
-
-    def forward(self, inputs):
-        # Modify the forward method, so that it returns only the features.
-        return super().extract_features(inputs)
-
 def load_model(model_base_path, num_classes=NUM_CLASSES):
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     model.to(device)
