@@ -125,7 +125,7 @@ def rescale_bbox(bboxes:list):
   return list(map(timesr, bboxes))
 
 # def output_adaptor(boxes:list, probs:list, labels:list):
-#   boxes = list(map(rescare_bbox,boxes))
+#   boxes = list(map(rescale_bbox,boxes))
 #   labels = list(map(lambda x: tool_class_list[x-1],labels))
 #   output = []
 #   for idx in range(len(boxes)):
@@ -161,7 +161,7 @@ if __name__ == '__main__' :
         # Append result to result
         if prediction and 'boxes' in prediction[0]:
             boxes,probs,labels = prediction_extractor(prediction, prob_threshold,iou_threshold)
-            boxes = list(map(rescare_bbox,boxes))
+            boxes = list(map(rescale_bbox,boxes))
             key = 0
 #             boxes = prediction[0]['boxes'].cpu().numpy().tolist()
 #             scores = prediction[0]['scores'].cpu().numpy().tolist()
