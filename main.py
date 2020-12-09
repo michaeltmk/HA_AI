@@ -160,7 +160,7 @@ if __name__ == '__main__' :
             prediction = model([img.to(device)])
         # Append result to result
         if prediction and 'boxes' in prediction[0]:
-            boxes,probs,labels = prediction_extractor(prediction, prob_threshold,iou_threshold)
+            boxes,scores,labels = prediction_extractor(prediction, prob_threshold,iou_threshold)
             boxes = list(map(rescale_bbox,boxes))
             key = 0
 #             boxes = prediction[0]['boxes'].cpu().numpy().tolist()
