@@ -82,17 +82,14 @@ def get_transform(img):
     trans = T2.Compose(transforms)
     return trans(img)
 
-import cv2
-import numpy as np
-
-def draw_box(img, prediction,  prob_threshold, iou_threshold):
+def prediction_extractor( prediction,  prob_threshold, iou_threshold):
   #prob filter
   boxes = prediction[0]['boxes'].cpu().numpy().tolist() #must be a list to feed into NMS
   probs = prediction[0]['scores'].cpu().numpy().tolist()
   labels = prediction[0]['labels'].cpu().numpy().tolist()
   keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=probs, score_threshold=prob_threshold, nms_threshold=iou_threshold)
-  COLORS = np.random.randint(0, 255, size=(max(labels), 3),dtype="uint8")
-  img = np.array(img)
+#   COLORS = np.random.randint(0, 255, size=(max(labels), 3),dtype="uint8")
+#   img = np.array(img)
 
   keep = list(map(lambda x: x[0], keep))
 
@@ -117,7 +114,7 @@ def draw_box(img, prediction,  prob_threshold, iou_threshold):
 #   plt.rcParams['figure.dpi'] = 100
 #   plt.show()
 
-  return {"boxes":boxes, "probs":probs, "labels":labels}
+  return boxes,probs,labels
 
 def rescale_bbox(bboxes:list):
   #input size of testing image: 4032*3024
@@ -127,14 +124,14 @@ def rescale_bbox(bboxes:list):
     return int(x/640*4032)
   return list(map(timesr, bboxes))
 
-def output_adaptor(boxes:list, probs:list, labels:list):
-  boxes = list(map(rescare_bbox,boxes))
-  labels = list(map(lambda x: tool_class_list[x-1],labels))
-  output = []
-  for idx in range(len(boxes)):
-    row = [labels[idx], probs[idx]] + boxes[idx]
-    output.append(row)
-  return output
+# def output_adaptor(boxes:list, probs:list, labels:list):
+#   boxes = list(map(rescare_bbox,boxes))
+#   labels = list(map(lambda x: tool_class_list[x-1],labels))
+#   output = []
+#   for idx in range(len(boxes)):
+#     row = [labels[idx], probs[idx]] + boxes[idx]
+#     output.append(row)
+#   return output
 
 if __name__ == '__main__' :
     df = pd.read_csv(input_data_path)
@@ -163,15 +160,17 @@ if __name__ == '__main__' :
             prediction = model([img.to(device)])
         # Append result to result
         if prediction and 'boxes' in prediction[0]:
+            boxes,probs,labels = prediction_extractor(prediction, prob_threshold,iou_threshold)
+            boxes = list(map(rescare_bbox,boxes))
             key = 0
-            boxes = prediction[0]['boxes'].cpu().numpy().tolist()
-            scores = prediction[0]['scores'].cpu().numpy().tolist()
-            labels = prediction[0]['labels'].cpu().numpy().tolist()
-            # keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=scores, score_threshold=prob_threshold, nms_threshold=iou_threshold)
-            # keep = list(map(lambda x: x[0], keep))
-            # boxes = [boxes[idx] for idx in keep]
-            # probs = [probs[idx] for idx in keep]
-            # labels = [labels[idx] for idx in keep]
+#             boxes = prediction[0]['boxes'].cpu().numpy().tolist()
+#             scores = prediction[0]['scores'].cpu().numpy().tolist()
+#             labels = prediction[0]['labels'].cpu().numpy().tolist()
+#             # keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=scores, score_threshold=prob_threshold, nms_threshold=iou_threshold)
+#             # keep = list(map(lambda x: x[0], keep))
+#             # boxes = [boxes[idx] for idx in keep]
+#             # probs = [probs[idx] for idx in keep]
+#             # labels = [labels[idx] for idx in keep]
 
             for box in boxes:
                 tool_class = tool_class_list[int(labels[key])]
