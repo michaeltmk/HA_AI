@@ -22,8 +22,8 @@ tool_class_list = [
     '\"Micro Scissors\"', '\"Needle Holders\"', '\"Pusher\"', '\"Spatula Surgical\"', '\"Speculum\"', '\"Spoon Surgical\"', '\"Tissue Forceps\"'
 ]
 NUM_CLASSES = len(tool_class_list)
-prob_threshold = 0.1
-iou_threshold = 0.5
+prob_threshold = 0.4
+iou_threshold = 0.7
 model_size = (480,640)
 
 def load_model(model_base_path, num_classes=NUM_CLASSES):
