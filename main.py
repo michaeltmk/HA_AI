@@ -6,11 +6,9 @@ import torchvision
 import numpy as np
 import pandas as pd
 import torchvision.transforms as trans
+from torchvision import transforms as T2
 
 from PIL import Image
-from efficientnet_pytorch import EfficientNet
-from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 
@@ -20,53 +18,23 @@ predict_result_path = sys.argv[2]
 counting_result_path = sys.argv[3]
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 tool_class_list = [
-    '\"Cannula\"', '\"Chopper\"', '\"Dressing Forceps\"', '\"Fixation Ring\"', '\"Handpieces\"', '\"Hook Surgical\"', '\"Iris Scissors\"', '\"Knife Scalpel Handles\"',
+    '\"bg\"','\"Cannula\"', '\"Chopper\"', '\"Dressing Forceps\"', '\"Fixation Ring\"', '\"Handpieces\"', '\"Hook Surgical\"', '\"Iris Scissors\"', '\"Knife Scalpel Handles\"',
     '\"Micro Scissors\"', '\"Needle Holders\"', '\"Pusher\"', '\"Spatula Surgical\"', '\"Speculum\"', '\"Spoon Surgical\"', '\"Tissue Forceps\"'
 ]
 NUM_CLASSES = len(tool_class_list)
-prob_threshold = 0.1
-iou_threshold = 0.5
+prob_threshold = 0.4
+iou_threshold = 0.7
+model_size = (480,640)
 
-class MyEfficientNet(EfficientNet):
-
-    def __init__(self, blocks_args=None, global_params=None):
-        super().__init__(blocks_args, global_params)
-
-    def forward(self, inputs):
-        # Modify the forward method, so that it returns only the features.
-        return super().extract_features(inputs)
-
-def load_model(model_name, model_base_path, num_classes = NUM_CLASSES):
-    if model_name == 'mobilenet_v2':
-        backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-    elif model_name == 'efficientnet-b0':
-        backbone = MyEfficientNet.from_pretrained(model_name='efficientnet-b0', num_classes=num_classes)
-    if model_name == 'mobilenet_v2':
-        backbone.out_channels = 1280
-    elif model_name == 'efficientnet-b0':
-        backbone.out_channels = 1280
-    anchor_generator = AnchorGenerator(
-        sizes=((32, 64, 128, 256, 512),),
-        aspect_ratios=((0.5, 1.0, 2.0),)
-    )
-    roi_pooler = torchvision.ops.MultiScaleRoIAlign(
-        featmap_names=['0'],
-        output_size=7,
-        sampling_ratio=2
-    )
-    model = FasterRCNN(
-        backbone,
-        num_classes=num_classes,
-        rpn_anchor_generator=anchor_generator,
-        box_roi_pool=roi_pooler
-    )
+def load_model(model_base_path, num_classes=NUM_CLASSES):
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, pretrained_backbone=False)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     model.to(device)
     if torch.cuda.is_available():
-        checkpoint = torch.load(os.path.join('/usr/src/efficientnetb0_v1_first_trial_4.pth'))
+        checkpoint = torch.load(os.path.join('/usr/src/resnet50_first_trial_maxacc.pth'))
     else:
-        checkpoint = torch.load(os.path.join('/usr/src/efficientnetb0_v1_first_trial_4.pth'), map_location=torch.device('cpu'))
+        checkpoint = torch.load(os.path.join('/usr/src/resnet50_first_trial_maxacc.pth'), map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint['state_dict'])
     return model
 
@@ -86,6 +54,85 @@ def export_result_file(predict_result, counting_result):
                 prediction.append("%s %s" % (tool_class, str(count)))
             f.write("%s,%s\n" % (path, ';'.join(prediction)))
 
+def get_transform(img):
+    transforms = []
+    # converts the image, a PIL image, into a PyTorch Tensor
+    width,height = img.size
+    transforms.append(T2.ToTensor())
+    #testing 
+    #transforms.append(T2.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0))
+    if width > height:
+        if width > model_size[1]:
+            temp_height = int(height/width*model_size[1])
+            temp_width = model_size[1]
+            transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
+            width = temp_width
+            height = temp_height
+    else:
+        if height > model_size[0]:
+            temp_height = model_size[0]
+            temp_width = int(width/height*model_size[0])
+            transforms.append(T2.Resize((temp_height,temp_width), interpolation=2))
+            width = temp_width
+            height = temp_height
+    addedx = int((model_size[1] - width)/2)
+    addedy = int((model_size[0] - height)/2)
+    transforms.append(T2.Pad((addedx,addedy), padding_mode='constant'))
+    transforms.append(T2.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]))
+    trans = T2.Compose(transforms)
+    return trans(img)
+
+def prediction_extractor( prediction,  prob_threshold, iou_threshold):
+  #prob filter
+  boxes = prediction[0]['boxes'].cpu().numpy().tolist() #must be a list to feed into NMS
+  probs = prediction[0]['scores'].cpu().numpy().tolist()
+  labels = prediction[0]['labels'].cpu().numpy().tolist()
+  keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=probs, score_threshold=prob_threshold, nms_threshold=iou_threshold)
+#   COLORS = np.random.randint(0, 255, size=(max(labels), 3),dtype="uint8")
+#   img = np.array(img)
+
+  keep = list(map(lambda x: x[0], keep))
+
+  boxes = [boxes[idx] for idx in keep]
+  probs = [probs[idx] for idx in keep]
+  labels = [labels[idx] for idx in keep]
+
+#   for idx in range(len(boxes)):
+#     box = boxes[idx]
+#     box = list(map(lambda x: int(x), box))
+#     label = labels[idx]
+#     prob = probs[idx]
+#     xmin, ymin, xmax, ymax = box
+#     color = [int(c) for c in COLORS[label-1]]
+
+#     cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
+#     text = f"{label}: {prob}"
+#     cv2.putText(img, text, (xmin, ymin - 5),
+#         cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1, 2)
+#     plt.imshow(img)
+
+#   plt.rcParams['figure.dpi'] = 100
+#   plt.show()
+
+  return boxes,probs,labels
+
+def rescale_bbox(bboxes:list):
+  #input size of testing image: 4032*3024
+  #resize to model input : 640*480
+  #so ratio = 640/4032 , we hard code the ratio this time
+  def timesr(x):
+    return int(x/640*4032)
+  return list(map(timesr, bboxes))
+
+# def output_adaptor(boxes:list, probs:list, labels:list):
+#   boxes = list(map(rescale_bbox,boxes))
+#   labels = list(map(lambda x: tool_class_list[x-1],labels))
+#   output = []
+#   for idx in range(len(boxes)):
+#     row = [labels[idx], probs[idx]] + boxes[idx]
+#     output.append(row)
+#   return output
+
 if __name__ == '__main__' :
     df = pd.read_csv(input_data_path)
     # predict_result: Creating an array like 
@@ -98,7 +145,7 @@ if __name__ == '__main__' :
     predict_result = {}
     counting_result = {}
     # Load Model
-    model = load_model(model_name='efficientnet-b0', model_base_path=os.path.dirname(__file__), num_classes=NUM_CLASSES)
+    model = load_model(model_base_path=os.path.dirname(__file__), num_classes=NUM_CLASSES)
     model.eval()
     for _index, row in df.iterrows():
         predict_result[row['ImagePath']] = []
@@ -106,22 +153,24 @@ if __name__ == '__main__' :
         img_path = os.path.join(base_path, row['ImagePath'])
         # Load image
         img = Image.open(img_path).convert("RGB")
-        Tr = trans.ToTensor()
-        img = Tr(img)
+        # Tr = trans.ToTensor()
+        img = get_transform(img)
         # Get Prediction
         with torch.no_grad():
             prediction = model([img.to(device)])
         # Append result to result
         if prediction and 'boxes' in prediction[0]:
+            boxes,scores,labels = prediction_extractor(prediction, prob_threshold,iou_threshold)
+            boxes = list(map(rescale_bbox,boxes))
             key = 0
-            boxes = prediction[0]['boxes'].cpu().numpy().tolist()
-            scores = prediction[0]['scores'].cpu().numpy().tolist()
-            labels = prediction[0]['labels'].cpu().numpy().tolist()
-            keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=probs, score_threshold=prob_threshold, nms_threshold=iou_threshold)
-            keep = list(map(lambda x: x[0], keep))
-            boxes = [boxes[idx] for idx in keep]
-            probs = [probs[idx] for idx in keep]
-            labels = [labels[idx] for idx in keep]
+#             boxes = prediction[0]['boxes'].cpu().numpy().tolist()
+#             scores = prediction[0]['scores'].cpu().numpy().tolist()
+#             labels = prediction[0]['labels'].cpu().numpy().tolist()
+#             # keep = cv2.dnn.NMSBoxes(bboxes=boxes, scores=scores, score_threshold=prob_threshold, nms_threshold=iou_threshold)
+#             # keep = list(map(lambda x: x[0], keep))
+#             # boxes = [boxes[idx] for idx in keep]
+#             # probs = [probs[idx] for idx in keep]
+#             # labels = [labels[idx] for idx in keep]
 
             for box in boxes:
                 tool_class = tool_class_list[int(labels[key])]
